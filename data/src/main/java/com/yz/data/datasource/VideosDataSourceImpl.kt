@@ -6,42 +6,16 @@ import com.google.gson.reflect.TypeToken
 import com.yz.domain.model.Video
 import javax.inject.Inject
 
-private const val ASSETS_FILE_NAME = "videos.json"
-
 class VideosDataSourceImpl @Inject constructor(
-    private val assetsDataSource: AssetsDataSource
+    private val mockDataDataSource: MockDataDataSource
 ) : VideosDataSource {
 
     override suspend fun getVideos(): Result<List<Video>> {
-        val readTextFile = assetsDataSource.readTextFile(ASSETS_FILE_NAME)
-        val jsonVideosResult = parseJsonVideos(readTextFile)
-        return mapJsonVideosToVideos(jsonVideosResult)
+        val jsonItemsResult = mockDataDataSource.getJsonItems()
+        return mapJsonItemsToVideos(jsonItemsResult)
     }
 
-    private fun mapJsonVideosToVideos(jsonVideosResult: Result<List<JsonVideo>>) =
-        jsonVideosResult.mapCatching { it.map { it.mapToVideo() } }
-
-    private fun parseJsonVideos(readTextFile: Result<String>): Result<List<JsonVideo>> {
-        val videosFromJsonResult = readTextFile.mapCatching {
-            val gson = Gson()
-            val itemType = object : TypeToken<List<JsonVideo>>() {}.type
-            val videosFromJsonList = gson.fromJson<List<JsonVideo>>(it, itemType)
-            videosFromJsonList
-        }
-        return videosFromJsonResult
-    }
-}
-
-private class JsonVideo(
-    @SerializedName("video_description") private val videoDescription: String,
-    @SerializedName("video_path") private val videoPath: String
-) {
-
-    fun mapToVideo(): Video {
-        return Video(
-            videoDescription,
-            videoPath
-        )
-    }
+    private fun mapJsonItemsToVideos(jsonItemsResult: Result<List<JsonItem>>) =
+        jsonItemsResult.mapCatching { it.map { it.mapToVideo() } }
 
 }
